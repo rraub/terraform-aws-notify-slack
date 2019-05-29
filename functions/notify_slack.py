@@ -34,7 +34,21 @@ def cloudwatch_notification(message, region):
                 }
             ]
         }
+    
+def ecs_notification(message, region):
+    states = {'RUNNING': 'good', 'PENDING': 'warning', 'PROVISIONING': 'warning', 'STOPPED': 'danger'}
 
+    return {
+            "color": states["RUNNING"],
+            "fallback": "ECS {} triggered".format(states[message['detail']["lastStatus"]]),
+            "fields": [
+                { "title": "lastStatus", "value": message['detail']["lastStatus"], "short": True },
+                { "title": "desiredStatus", "value": message['detail']["desiredStatus"], "short": True },
+                { "title": "taskDefinitionArn", "value": message['detail']["taskDefinitionArn"], "short": False },
+                { "title": "group", "value": message['detail']["group"], "short": True },
+                { "title": "time", "value": message['time'], "short": True}
+            ]
+        }
 
 def default_notification(subject, message):
     return {
@@ -66,7 +80,11 @@ def notify_slack(subject, message, region):
             logging.exception(f'JSON decode error: {err}')
     if "AlarmName" in message:
         notification = cloudwatch_notification(message, region)
-        payload['text'] = "AWS CloudWatch notification - " + message["AlarmName"]
+        payload['text'] = "AWS CloudWatch notification - " + message['AlarmName']
+        payload['attachments'].append(notification)
+    elif ("source" in message and message['source'] == "aws.ecs"):
+        notification = ecs_notification(message, region)
+        payload['text'] = "AWS ECS notification - " + message["detail-type"]
         payload['attachments'].append(notification)
     else:
         payload['text'] = "AWS notification"
