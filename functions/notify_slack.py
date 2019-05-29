@@ -36,16 +36,16 @@ def cloudwatch_notification(message, region):
         }
     
 def ecs_notification(message, region):
-    states = {'RUNNING': 'good', 'PENDING': 'warning', 'PROVISIONING': 'warning', 'STOPPED': 'danger'}
+    states = {'RUNNING': 'good', 'PENDING': 'warning', 'PROVISIONING': 'warning', 'DEPROVISIONING': 'warning', 'STOPPED': 'danger'}
 
     return {
-            "color": states["RUNNING"],
-            "fallback": "ECS {} triggered".format(states[message['detail']["lastStatus"]]),
+            "color": states[message['detail']['lastStatus']],
+            "fallback": "ECS {} triggered".format(message['detail']),
             "fields": [
-                { "title": "lastStatus", "value": message['detail']["lastStatus"], "short": True },
-                { "title": "desiredStatus", "value": message['detail']["desiredStatus"], "short": True },
-                { "title": "taskDefinitionArn", "value": message['detail']["taskDefinitionArn"], "short": False },
-                { "title": "group", "value": message['detail']["group"], "short": True },
+                { "title": "lastStatus", "value": message['detail']['lastStatus'], "short": True },
+                { "title": "desiredStatus", "value": message['detail']['desiredStatus'], "short": True },
+                { "title": "taskDefinitionArn", "value": message['detail']['taskDefinitionArn'], "short": False },
+                { "title": "group", "value": message['detail']['group'], "short": True },
                 { "title": "time", "value": message['time'], "short": True}
             ]
         }
